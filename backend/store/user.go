@@ -20,12 +20,18 @@ func ValidateUser(username, password string) bool {
 	return false
 }
 
-func createUser(username string, password string) {
+func CreateUser(username string, password string) error {
 	hashed, err := hashAndSalt(password)
 	if err != nil {
 		log.Panic(err)
+		return err
 	}
-	log.Println(hashed)
+	_, err = db.Exec("INSERT INTO users (username, password) VALUES ($1, $2) ON CONFLICT (username) DO UPDATE set password = excluded.password", username, hashed)
+	if err != nil {
+		log.Panic(err)
+		return err
+	}
+	return nil
 }
 
 func hashAndSalt(pwd string) (string, error) {

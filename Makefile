@@ -1,4 +1,6 @@
-all: backend
+all: frontend backend Dockerfile
+	make vuedep
+	make godep
 	make vuebuild
 	make gobuild
 	make dockerbuild
@@ -17,7 +19,7 @@ vue: frontend
 godep: backend
 	cd backend && dep ensure
 godev: backend
-	cd backend && DB_CONN=postgresql://timescale:testpassword@localhost:5432/timescale?sslmode=disable gin
+	cd backend && JWT_SECRET=devsecret PORT=3001 DB_CONN=postgresql://timescale:testpassword@localhost:5432/timescale?sslmode=disable gin
 gobuild: backend
 	CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o timescale ./backend/*.go
 dockerbuild: backend frontend Dockerfile

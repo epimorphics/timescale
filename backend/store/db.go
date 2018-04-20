@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	_ "github.com/lib/pq"
 	"log"
-	"os"
 )
 
 var db *sql.DB
@@ -13,8 +12,8 @@ func CloseDB() {
 	db.Close()
 }
 
-func OpenDB() {
-	newdb, err := sql.Open("postgres", os.Getenv("DB_CONN"))
+func OpenDB(DatabaseConnection string) {
+	newdb, err := sql.Open("postgres", DatabaseConnection)
 	if err != nil {
 		log.Panic(err)
 	}

@@ -2,33 +2,39 @@ package main
 
 import (
 	"github.com/epimorphics/timescale/backend/store"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"github.com/kelseyhightower/envconfig"
 	"log"
 	"net/http"
 )
 
-type config struct {
-	Port string `yaml:"port"`
+type Specification struct {
+	Port               string `envconfig:"PORT" default:"3000"`
+	AdminUsername      string `split_words:"true"`
+	AdminPassword      string `split_words:"true"`
+	JWTSecret          string `required:"true" envconfig:"JWT_SECRET"`
+	DatabaseConnection string `envconfig:"DB_CONN" required:"true"`
 }
 
-func (c *config) getConf() *config {
-	yamlFile, err := ioutil.ReadFile("conf.yaml")
-	if err != nil {
-		log.Panic(err)
-	}
-	err = yaml.Unmarshal(yamlFile, c)
-	if err != nil {
-		log.Panic(err)
-	}
-	return c
-}
+var s Specification
 
 func main() {
-	var c config
-	c.getConf()
-	store.OpenDB()
+	err := envconfig.Usage("timescale", &s)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	err = envconfig.Process("timescale", &s)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	store.OpenDB(s.DatabaseConnection)
+	if s.AdminUsername != "" && s.AdminPassword != "" {
+		err := store.CreateUser(s.AdminUsername, s.AdminPassword)
+		if err != nil {
+			log.Panic(err)
+			return
+		}
+	}
 	defer store.CloseDB()
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(c.Port, router))
+	log.Fatal(http.ListenAndServe(":"+s.Port, router))
 }
