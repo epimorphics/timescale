@@ -55,6 +55,7 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 					return []byte(os.Getenv("JWT_SECRET")), nil
 				})
 				if error != nil {
+					w.WriteHeader(http.StatusUnauthorized)
 					json.NewEncoder(w).Encode(error.Error())
 					return
 				}
@@ -62,10 +63,12 @@ func ValidateMiddleware(next http.HandlerFunc) http.HandlerFunc {
 					context.Set(r, "decoded", token.Claims)
 					next(w, r)
 				} else {
+					w.WriteHeader(http.StatusUnauthorized)
 					json.NewEncoder(w).Encode("Invalid authorization token")
 				}
 			}
 		} else {
+			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode("An authorization header is required")
 		}
 	})

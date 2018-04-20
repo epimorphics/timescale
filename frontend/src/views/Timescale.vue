@@ -32,12 +32,16 @@ export default {
           }
           vueM.tableData = resp.body
         })
+        .catch((err) => {
+          if (err.status == 401) {
+            Cookies.remove('token')
+            window.location.reload()
+            this.$router.push({ path: 'login' })
+          }
+        })
     }
   },
   mounted () {
-    if (!Cookies.get('token')) {
-      this.$router.push({ path: 'login' })
-    } 
     this.getTable()
   }
 }
